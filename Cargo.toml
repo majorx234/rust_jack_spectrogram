@@ -1,0 +1,23 @@
+[package]
+name = "rust_jack_spectrogram"
+version = "0.1.0"
+authors = ["MajorX234 <majorx234@googlemail.com>"]
+edition = "2021"
+
+[lib]
+name = "spectrogram_lib"
+path = "src/lib.rs"
+
+[[bin]]
+name = "spectrogram_gui"
+path = "src/spectrogram_gui/bin/main.rs"
+
+[dependencies]
+eframe = { version = "0.18.0"}
+jack = "0.10.0"
+crossbeam-channel = "0.5.6"
+apodize = {version = "1.0.0"}
+strider = {version = "0.1.3"}
+num = {version = "0.4.0"}
+rustfft = {version = "6.1.0"}
+
