@@ -1,8 +1,15 @@
 use jack;
 
+use ringbuf::Producer;
+use ringbuf::SharedRb;
+use std::mem::MaybeUninit;
+use std::sync::Arc;
 use std::{thread, time::Duration};
 
-pub fn start_jack_thread() -> std::thread::JoinHandle<()> {
+pub fn start_jack_thread(
+    mut ringbuffer_left_in: Producer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
+    mut ringbuffer_right_in: Producer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
+) -> std::thread::JoinHandle<()> {
     std::thread::spawn(move || {
         let mut run: bool = true;
         let (client, _status) =
@@ -21,6 +28,17 @@ pub fn start_jack_thread() -> std::thread::JoinHandle<()> {
         let process_callback = move |_: &jack::Client, ps: &jack::ProcessScope| -> jack::Control {
             let in_a_p = in_a.as_slice(ps);
             let in_b_p = in_b.as_slice(ps);
+
+            for (sample_left, sample_right) in in_a_p.iter().zip(in_b_p.iter()) {
+                match ringbuffer_left_in.push(*sample_left) {
+                    Ok(_) => (),
+                    Err(_) => (),
+                };
+                match ringbuffer_right_in.push(*sample_right) {
+                    Ok(_) => (),
+                    Err(_) => (),
+                };
+            }
 
             jack::Control::Continue
         };

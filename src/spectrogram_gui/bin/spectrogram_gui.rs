@@ -1,5 +1,10 @@
 use eframe::egui;
+use ringbuf::Consumer;
+use ringbuf::SharedRb;
 use std::f32;
+use std::mem::MaybeUninit;
+use std::sync::Arc;
+
 use std::f64::consts::TAU;
 use std::ops::RangeInclusive;
 
@@ -81,16 +86,33 @@ impl Spectrum {
 
 pub struct SpectrogramGui {
     spectrum: Spectrum,
+    ringbuffer_left_out: Option<Consumer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>>,
+    ringbuffer_right_out:
+        Option<Consumer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>>,
 }
 
 impl Default for SpectrogramGui {
     fn default() -> Self {
         Self {
+            ringbuffer_left_out: None,
+            ringbuffer_right_out: None,
             spectrum: Spectrum::default(),
         }
     }
 }
-
+impl SpectrogramGui {
+    pub fn set_ringbuffer(
+        &mut self,
+        mut ringbuffer_left_out: Consumer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
+        mut ringbuffer_right_out: Consumer<
+            f32,
+            Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>,
+        >,
+    ) {
+        self.ringbuffer_left_out = Some(ringbuffer_left_out);
+        self.ringbuffer_right_out = Some(ringbuffer_right_out);
+    }
+}
 impl eframe::App for SpectrogramGui {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
