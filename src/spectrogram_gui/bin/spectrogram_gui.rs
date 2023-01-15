@@ -48,7 +48,7 @@ struct Spectrum {
 impl Default for Spectrum {
     fn default() -> Self {
         Self {
-            values: Vec::new(),
+            values: vec![0.0; 512],
             window_size: 512,
             step_size: 512,
             time: 0.0,
@@ -59,13 +59,13 @@ impl Default for Spectrum {
 impl Spectrum {
     fn ui(&mut self, ui: &mut Ui) -> Response {
         ui.ctx().request_repaint();
-        self.time += ui.input().unstable_dt.at_most(1.0 / 30.0) as f32 * 0.1;
+        //self.time += ui.input().unstable_dt.at_most(1.0 / 30.0) as f32 * 0.1;
         self.bar_plot(ui)
     }
 
     fn bar_plot(&mut self, ui: &mut Ui) -> Response {
         let phase_fm = self.time;
-        self.values = fm_data_signal_generator(512, phase_fm);
+        //self.values = fm_data_signal_generator(512, phase_fm);
         let mut chart = BarChart::new(
             (0..512)
                 .step_by(1)
@@ -81,6 +81,11 @@ impl Spectrum {
             //            .clamp_grid(true)
             .show(ui, |plot_ui| plot_ui.bar_chart(chart))
             .response
+    }
+    fn set_values(&mut self, new_values: &[f32]) {
+        for (value, new_value) in self.values.iter_mut().zip(new_values.iter()) {
+            *value = *new_value;
+        }
     }
 }
 
@@ -118,6 +123,28 @@ impl eframe::App for SpectrogramGui {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("SpectrogramGui");
             ui.vertical(|ui| {
+                match &mut self.ringbuffer_left_out {
+                    Some(ringbuffer_left_out) => {
+                        while ringbuffer_left_out.len() >= self.spectrum.step_size {
+                            let (older_audio, newer_audio) = ringbuffer_left_out.as_slices();
+                            if older_audio.len() >= self.spectrum.step_size {
+                                for idx in (0..self.spectrum.step_size) {
+                                    self.spectrum.values[idx] = older_audio[idx];
+                                }
+                            } else {
+                                for idx in 0..older_audio.len() {
+                                    self.spectrum.values[idx] = older_audio[idx];
+                                }
+                                for idx in older_audio.len()..self.spectrum.step_size {
+                                    self.spectrum.values[idx] =
+                                        newer_audio[idx - older_audio.len()];
+                                }
+                            }
+                            ringbuffer_left_out.skip(self.spectrum.step_size);
+                        }
+                    }
+                    None => (),
+                }
                 self.spectrum.ui(ui);
                 ui.label("Test ");
             });
