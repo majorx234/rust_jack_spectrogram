@@ -29,17 +29,8 @@ pub fn start_jack_thread(
             let in_a_p = in_a.as_slice(ps);
             let in_b_p = in_b.as_slice(ps);
 
-            for (sample_left, sample_right) in in_a_p.iter().zip(in_b_p.iter()) {
-                match ringbuffer_left_in.push(*sample_left) {
-                    Ok(_) => (),
-                    Err(_) => (),
-                };
-                match ringbuffer_right_in.push(*sample_right) {
-                    Ok(_) => (),
-                    Err(_) => (),
-                };
-            }
-
+            ringbuffer_left_in.push_iter(&mut in_a_p.into_iter().map(|x| *x));
+            ringbuffer_right_in.push_iter(&mut in_b_p.into_iter().map(|x| *x));
             jack::Control::Continue
         };
         let process = jack::ClosureProcessHandler::new(process_callback);
