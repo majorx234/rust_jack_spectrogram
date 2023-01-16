@@ -12,6 +12,9 @@ path = "src/lib.rs"
 name = "spectrogram_gui"
 path = "src/spectrogram_gui/bin/main.rs"
 
+[[bin]]
+name = "ringbuffer_test"
+path = "src/ringbuffer_test/bin/main.rs"
 [dependencies]
 eframe = { version = "0.18.0"}
 crossbeam-channel = "0.5.6"
