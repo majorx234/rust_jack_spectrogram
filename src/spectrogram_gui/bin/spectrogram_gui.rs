@@ -18,6 +18,8 @@ use plot::{
     MarkerShape, Plot, PlotImage, Points, Polygon, Text, VLine,
 };
 
+type ConsumerRbf32 = Consumer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>;
+
 fn fm_data_signal_generator(num_samples: usize, phase_fm: f32) -> Vec<f32> {
     let freq: f32 = 1000.0;
     let fsample_rate: f32 = 48000.0;
@@ -96,9 +98,8 @@ impl Spectrum {
 
 pub struct SpectrogramGui {
     spectrum: Spectrum,
-    ringbuffer_left_out: Option<Consumer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>>,
-    ringbuffer_right_out:
-        Option<Consumer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>>,
+    ringbuffer_left_out: Option<ConsumerRbf32>,
+    ringbuffer_right_out: Option<ConsumerRbf32>,
 }
 
 impl Default for SpectrogramGui {
@@ -113,11 +114,8 @@ impl Default for SpectrogramGui {
 impl SpectrogramGui {
     pub fn set_ringbuffer(
         &mut self,
-        mut ringbuffer_left_out: Consumer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>,
-        mut ringbuffer_right_out: Consumer<
-            f32,
-            Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>,
-        >,
+        mut ringbuffer_left_out: ConsumerRbf32,
+        mut ringbuffer_right_out: ConsumerRbf32,
     ) {
         self.ringbuffer_left_out = Some(ringbuffer_left_out);
         self.ringbuffer_right_out = Some(ringbuffer_right_out);
