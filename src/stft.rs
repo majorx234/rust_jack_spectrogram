@@ -253,7 +253,7 @@ where
     pub fn compute_column(&mut self, input: &[T], output: &mut [T]) {
         assert_eq!(self.output_size(), output.len());
 
-        self.compute_into_complex_output(&input);
+        self.compute_into_complex_output(input);
 
         // copy inplace result of fft to output
         for (dst, src) in output.iter_mut().zip(self.complex_input.iter()) {
