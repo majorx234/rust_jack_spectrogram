@@ -85,6 +85,10 @@ impl Spectrum {
 
         Plot::new("Spectrum Demo")
             .legend(Legend::default())
+            .data_aspect(4.0 / 512.0)
+            .include_x(2.0)
+            .include_y(512.0)
+            .width(100.0)
             //            .clamp_grid(true)
             .show(ui, |plot_ui| plot_ui.bar_chart(chart))
             .response
