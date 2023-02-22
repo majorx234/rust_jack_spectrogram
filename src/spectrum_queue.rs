@@ -1,3 +1,4 @@
+use crate::fifo_queue::FifoQueue;
 use std::{collections::VecDeque, default};
 
 pub struct SpectrumQueue {
@@ -5,23 +6,30 @@ pub struct SpectrumQueue {
     pub size: usize,
 }
 
-impl SpectrumQueue {
-    pub fn new(size: usize) -> Self {
+impl FifoQueue<Vec<f32>> for SpectrumQueue {
+    fn new(size: usize) -> Self {
         SpectrumQueue {
             data: VecDeque::new(),
             size,
         }
     }
 
-    pub fn push(&mut self, spectrum: Vec<f32>) {
-        self.data.push_back(spectrum);
-
+    fn push(&mut self, new_data: Vec<f32>) {
+        self.data.push_back(new_data);
         while self.data.len() > self.size {
             self.data.pop_front();
         }
     }
 
-    pub fn pop(&mut self) -> Option<Vec<f32>> {
+    fn pop(&mut self) -> Option<Vec<f32>> {
         self.data.pop_front()
+    }
+
+    fn len(&self) -> usize {
+        self.data.len()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.data.is_empty()
     }
 }
