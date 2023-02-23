@@ -13,7 +13,7 @@ fn main() {
     let jack_thread = start_jack_thread(ringbuffer_left_in, ringbuffer_right_in);
 
     let mut spectrogram_app = SpectrogramGui::default();
-    spectrogram_app.set_ringbuffer(ringbuffer_left_out, ringbuffer_right_out);
+    //    spectrogram_app.set_ringbuffer(ringbuffer_left_out, ringbuffer_right_out);
     let mut options = eframe::NativeOptions::default();
     let window_size: eframe::egui::Vec2 = eframe::egui::Vec2::new(600.0, 300.0);
     options.initial_window_size = Some(window_size);
