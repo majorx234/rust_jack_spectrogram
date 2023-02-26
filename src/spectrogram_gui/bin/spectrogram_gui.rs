@@ -1,4 +1,5 @@
 use eframe::egui;
+use eframe::egui::{lerp, Color32, Rgba, TextureHandle};
 use egui::plot::{GridInput, GridMark};
 use egui::*;
 use plot::{
@@ -11,11 +12,17 @@ use std::f64::consts::TAU;
 use std::ops::RangeInclusive;
 
 //#[derive(PartialEq)]
-struct Spectrum {}
+struct Spectrum {
+    tex_mngr: TextureManager,
+    texture_id: Option<(egui::Vec2, egui::TextureId)>,
+}
 
 impl Default for Spectrum {
     fn default() -> Self {
-        Self {}
+        Self {
+            tex_mngr: TextureManager(Vec::<Color32>::new()),
+            texture_id: None,
+        }
     }
 }
 
@@ -55,6 +62,45 @@ impl Spectrum {
         for (value, new_value) in values.iter_mut().zip(new_values.iter()) {
             *value = *new_value;
         }
+    }
+}
+
+fn value_to_rgb(value: u8) -> egui::epaint::Color32 {
+    let min_value = 0.0;
+    let max_value = 255.0;
+    Color32::from_rgb(0, 0, 0)
+}
+
+#[derive(Default)]
+struct TextureManager(Vec<egui::epaint::Color32>);
+
+impl TextureManager {
+    pub fn get_spectrogram_texture(
+        &mut self,
+        ctx: &egui::Context,
+        specs: Vec<Vec<u8>>,
+        width: usize,
+        height: usize,
+    ) -> TextureHandle {
+        let mut new_cols = specs
+            .into_iter()
+            .flatten()
+            .map(|x| egui::epaint::Color32::from_gray(x))
+            .collect::<Vec<Color32>>();
+        self.0.append(&mut new_cols);
+        let current_length = self.0.len();
+        if current_length > width * height {
+            let drain_count = current_length - width * height;
+            self.0.drain(0..drain_count);
+        }
+        let pixels: Vec<egui::epaint::Color32> = self.0.clone();
+        ctx.load_texture(
+            "color_test_gradient",
+            egui::ColorImage {
+                size: [width, height],
+                pixels,
+            },
+        )
     }
 }
 
