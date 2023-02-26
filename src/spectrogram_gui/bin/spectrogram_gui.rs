@@ -1,15 +1,14 @@
 use eframe::egui;
-use std::f32;
-
-use std::f64::consts::TAU;
-use std::ops::RangeInclusive;
-
 use egui::plot::{GridInput, GridMark};
 use egui::*;
 use plot::{
     Arrows, Bar, BarChart, CoordinatesFormatter, Corner, HLine, Legend, Line, LineStyle,
     MarkerShape, Plot, PlotImage, Points, Polygon, Text, VLine,
 };
+use spectrogram_lib::stft_handler::StftHandler;
+use std::f32;
+use std::f64::consts::TAU;
+use std::ops::RangeInclusive;
 
 //#[derive(PartialEq)]
 struct Spectrum {}
@@ -27,7 +26,7 @@ impl Spectrum {
     }
 
     fn bar_plot(&mut self, ui: &mut Ui) -> Response {
-        let values = vec![0.0; 10]; // ToDo get values from Queue object
+        let values = vec![0.0; 512]; // ToDo get values from Queue object
         let mut chart = BarChart::new(
             (0..512)
                 .step_by(1)
@@ -61,18 +60,32 @@ impl Spectrum {
 
 pub struct SpectrogramGui {
     spectrum: Spectrum,
+    stft_handler: Option<StftHandler>,
 }
 
+impl SpectrogramGui {
+    pub fn new(stft_handler: StftHandler) -> Self {
+        Self {
+            spectrum: Spectrum::default(),
+            stft_handler: Some(stft_handler),
+        }
+    }
+}
 impl Default for SpectrogramGui {
     fn default() -> Self {
         Self {
             spectrum: Spectrum::default(),
+            stft_handler: None,
         }
     }
 }
 
 impl eframe::App for SpectrogramGui {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        let mut spectrum = Vec::new();
+        if let Some(stft_handler) = &mut self.stft_handler {
+            spectrum = stft_handler.get_spectrum();
+        }
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("SpectrogramGui");
             ui.vertical(|ui| {

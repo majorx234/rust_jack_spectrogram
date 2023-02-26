@@ -11,10 +11,11 @@ use std::sync::{Arc, Mutex};
 
 type ConsumerRbf32 = Consumer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>;
 
-struct StftHandler {
+pub struct StftHandler {
     ringbuffer_left_out: Option<ConsumerRbf32>,
     ringbuffer_right_out: Option<ConsumerRbf32>,
-    spectrum_queue: Arc<Mutex<SpectrumQueue>>,
+    spectrum_queue_left: Arc<Mutex<SpectrumQueue>>,
+    spectrum_queue_right: Arc<Mutex<SpectrumQueue>>,
     window_size: usize,
     step_size: usize,
     time: f32,
@@ -26,7 +27,8 @@ impl Default for StftHandler {
         Self {
             ringbuffer_left_out: None,
             ringbuffer_right_out: None,
-            spectrum_queue: Arc::new(Mutex::new(SpectrumQueue::new(2048))),
+            spectrum_queue_left: Arc::new(Mutex::new(SpectrumQueue::new(2048))),
+            spectrum_queue_right: Arc::new(Mutex::new(SpectrumQueue::new(2048))),
             window_size: 512,
             step_size: 256,
             time: 0.0,
@@ -36,13 +38,18 @@ impl Default for StftHandler {
 }
 
 impl StftHandler {
-    pub fn set_ringbuffer(
-        &mut self,
-        mut ringbuffer_left_out: ConsumerRbf32,
-        mut ringbuffer_right_out: ConsumerRbf32,
-    ) {
-        self.ringbuffer_left_out = Some(ringbuffer_left_out);
-        self.ringbuffer_right_out = Some(ringbuffer_right_out);
+    // ToDo improove in future
+    pub fn new(ringbuffer_left_out: ConsumerRbf32, ringbuffer_right_out: ConsumerRbf32) -> Self {
+        Self {
+            ringbuffer_left_out: Some(ringbuffer_left_out),
+            ringbuffer_right_out: Some(ringbuffer_right_out),
+            spectrum_queue_left: Arc::new(Mutex::new(SpectrumQueue::new(2048))),
+            spectrum_queue_right: Arc::new(Mutex::new(SpectrumQueue::new(2048))),
+            window_size: 512,
+            step_size: 256,
+            time: 0.0,
+            stft: STFT::new(WindowType::Hanning, 1024, 1024),
+        }
     }
 
     pub fn run(&mut self) {
@@ -64,7 +71,10 @@ impl StftHandler {
                         }
                         ringbuffer_left_out.skip(self.step_size);
                         self.stft.compute_column(&mut tmp_vec, &mut values);
-                        self.spectrum_queue.lock().expect("Unlock").push(values);
+                        self.spectrum_queue_left
+                            .lock()
+                            .expect("Unlock")
+                            .push(values);
                     }
                 }
             }
@@ -73,8 +83,18 @@ impl StftHandler {
         match &mut self.ringbuffer_right_out {
             Some(ringbuffer_right_out) => {
                 ringbuffer_right_out.skip(self.step_size);
+                // ToDo: Same as left buffer
             }
             None => (),
         }
+    }
+
+    pub fn get_spectrum(&mut self) -> Vec<Vec<f32>> {
+        // ToDo: return tuble of left and right side
+        let mut spec_vec = Vec::new();
+        while let Some(spectrum) = self.spectrum_queue_left.lock().expect("Unlock").pop() {
+            spec_vec.push(spectrum);
+        }
+        return spec_vec;
     }
 }
