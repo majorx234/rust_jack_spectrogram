@@ -33,7 +33,14 @@ impl Spectrum {
     }
 
     fn bar_plot(&mut self, ui: &mut Ui) -> Response {
-        let values = vec![0.0; 512]; // ToDo get values from Queue object
+        let len = self.tex_mngr.0.len();
+        let mut values = vec![0.0; 512]; // ToDo get values from Queue object
+        if len >= 512 {
+            for (value, tex_value) in values.iter_mut().zip(&self.tex_mngr.0[(len - 512)..len]) {
+                *value = tex_value.r() as f64;
+            }
+        }
+
         let mut chart = BarChart::new(
             (0..512)
                 .step_by(1)
@@ -54,14 +61,17 @@ impl Spectrum {
             .response
     }
 
-    fn set_values(&mut self, new_values: &[f32]) {
-        // Todo: maybe delete this function
-        // prupose is calling from outer to set values,
-        // maybe set Spectrogramm or texures now
-        let mut values = vec![0.0; 10];
-        for (value, new_value) in values.iter_mut().zip(new_values.iter()) {
-            *value = *new_value;
+    fn set_values(&mut self, ctx: &egui::Context, specs: Vec<Vec<f32>>) {
+        let mut int_specs = Vec::new();
+        for spec in specs.iter() {
+            let int_spec = spec
+                .iter()
+                .map(|&value| (255.0 * value.abs()) as u8)
+                .collect();
+            int_specs.push(int_spec);
         }
+        self.tex_mngr
+            .get_spectrogram_texture(ctx, int_specs, 1024, 512);
     }
 }
 
@@ -93,6 +103,8 @@ impl TextureManager {
             let drain_count = current_length - width * height;
             self.0.drain(0..drain_count);
         }
+        // maybe return an option
+        // or handle if pixels.len() < width*height
         let pixels: Vec<egui::epaint::Color32> = self.0.clone();
         ctx.load_texture(
             "color_test_gradient",
@@ -135,6 +147,9 @@ impl eframe::App for SpectrogramGui {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("SpectrogramGui");
             ui.vertical(|ui| {
+                if spectrum.len() > 0 {
+                    self.spectrum.set_values(ctx, spectrum);
+                }
                 self.spectrum.ui(ui);
                 ui.label("Test ");
             });
