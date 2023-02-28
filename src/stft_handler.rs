@@ -48,7 +48,7 @@ impl StftHandler {
             window_size: 512,
             step_size: 256,
             time: 0.0,
-            stft: STFT::new(WindowType::Hanning, 1024, 1024),
+            stft: STFT::new(WindowType::Hanning, 1024, 512),
         }
     }
 
@@ -57,7 +57,7 @@ impl StftHandler {
             Some(ringbuffer_left_out) => {
                 while ringbuffer_left_out.len() > 512 {
                     let mut values: Vec<f32> = vec![0.0; 512];
-                    let mut tmp_vec: Vec<f32> = vec![0.0; 512];
+                    let mut tmp_vec: Vec<f32> = vec![0.0; 1024];
                     if ringbuffer_left_out.len() >= self.window_size {
                         let (older_audio, newer_audio) = ringbuffer_left_out.as_slices();
                         if older_audio.len() >= self.window_size {

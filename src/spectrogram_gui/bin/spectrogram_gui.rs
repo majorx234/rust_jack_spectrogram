@@ -13,6 +13,7 @@ use std::ops::RangeInclusive;
 
 //#[derive(PartialEq)]
 struct Spectrum {
+    last_vec: Vec<f32>,
     tex_mngr: TextureManager,
     texture_id: Option<(egui::Vec2, egui::TextureId)>,
 }
@@ -20,6 +21,7 @@ struct Spectrum {
 impl Default for Spectrum {
     fn default() -> Self {
         Self {
+            last_vec: vec![0.0; 512],
             tex_mngr: TextureManager(Vec::<Color32>::new()),
             texture_id: None,
         }
@@ -33,18 +35,10 @@ impl Spectrum {
     }
 
     fn bar_plot(&mut self, ui: &mut Ui) -> Response {
-        let len = self.tex_mngr.0.len();
-        let mut values = vec![0.0; 512]; // ToDo get values from Queue object
-        if len >= 512 {
-            for (value, tex_value) in values.iter_mut().zip(&self.tex_mngr.0[(len - 512)..len]) {
-                *value = tex_value.r() as f64;
-            }
-        }
-
         let mut chart = BarChart::new(
             (0..512)
                 .step_by(1)
-                .map(|x| (x as f64, values[x] as f64))
+                .map(|x| (x as f64, self.last_vec[x] as f64))
                 .map(|(x, f)| Bar::new(x, f.abs()).width(0.01))
                 .collect(),
         )
@@ -62,7 +56,7 @@ impl Spectrum {
     }
 
     fn set_values(&mut self, ctx: &egui::Context, specs: Vec<Vec<f32>>) {
-        let mut int_specs = Vec::new();
+        let mut int_specs: Vec<Vec<u8>> = Vec::new();
         for spec in specs.iter() {
             let int_spec = spec
                 .iter()
@@ -70,8 +64,11 @@ impl Spectrum {
                 .collect();
             int_specs.push(int_spec);
         }
-        self.tex_mngr
-            .get_spectrogram_texture(ctx, int_specs, 1024, 512);
+        for (last, new) in self.last_vec.iter_mut().zip(&specs[specs.len() - 1]) {
+            *last = *new;
+        }
+        // self.tex_mngr
+        //    .get_spectrogram_texture(ctx, int_specs, 1024, 512);
     }
 }
 
@@ -142,6 +139,7 @@ impl eframe::App for SpectrogramGui {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         let mut spectrum = Vec::new();
         if let Some(stft_handler) = &mut self.stft_handler {
+            stft_handler.run();
             spectrum = stft_handler.get_spectrum();
         }
         egui::CentralPanel::default().show(ctx, |ui| {
