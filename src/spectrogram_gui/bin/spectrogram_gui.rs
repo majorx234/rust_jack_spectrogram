@@ -22,16 +22,21 @@ impl Default for Spectrum {
     fn default() -> Self {
         Self {
             last_vec: vec![0.0; 512],
-            tex_mngr: TextureManager(Vec::<Color32>::new()),
+            tex_mngr: TextureManager(vec![Color32::from_rgb(0, 0, 0); 1024 * 512]),
             texture_id: None,
         }
     }
 }
 
 impl Spectrum {
-    fn ui(&mut self, ui: &mut Ui) -> Response {
+    fn ui(&mut self, ui: &mut Ui) {
         ui.ctx().request_repaint();
-        self.bar_plot(ui)
+        //        ui.horizontal(|ui| {});
+        if let Some((size, texture_id)) = self.texture_id {
+            ui.heading("This is a spectrogram:");
+            ui.add(egui::Image::new(texture_id, size));
+        }
+        self.bar_plot(ui);
     }
 
     fn bar_plot(&mut self, ui: &mut Ui) -> Response {
@@ -67,8 +72,10 @@ impl Spectrum {
         for (last, new) in self.last_vec.iter_mut().zip(&specs[specs.len() - 1]) {
             *last = *new;
         }
-        // self.tex_mngr
-        //    .get_spectrogram_texture(ctx, int_specs, 1024, 512);
+        let texture_id = Some(
+            self.tex_mngr
+                .get_spectrogram_texture(ctx, int_specs, 1024, 512),
+        );
     }
 }
 
@@ -149,7 +156,6 @@ impl eframe::App for SpectrogramGui {
                     self.spectrum.set_values(ctx, spectrum);
                 }
                 self.spectrum.ui(ui);
-                ui.label("Test ");
             });
         });
     }
