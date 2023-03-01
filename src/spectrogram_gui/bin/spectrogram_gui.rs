@@ -13,16 +13,16 @@ use std::ops::RangeInclusive;
 
 //#[derive(PartialEq)]
 struct Spectrum {
-    last_vec: Vec<f32>,
-    tex_mngr: TextureManager,
-    texture_id: Option<(egui::Vec2, egui::TextureId)>,
+    pub last_vec: Vec<f32>,
+    pub tex_mngr: TextureManager,
+    pub texture_id: Option<(egui::Vec2, egui::TextureId)>,
 }
 
 impl Default for Spectrum {
     fn default() -> Self {
         Self {
             last_vec: vec![0.0; 512],
-            tex_mngr: TextureManager(vec![Color32::from_rgb(0, 0, 0); 1024 * 512]),
+            tex_mngr: TextureManager(vec![Color32::from_rgb(255, 255, 255); 1024 * 512]),
             texture_id: None,
         }
     }
@@ -32,11 +32,7 @@ impl Spectrum {
     fn ui(&mut self, ui: &mut Ui) {
         ui.ctx().request_repaint();
         //        ui.horizontal(|ui| {});
-        if let Some((size, texture_id)) = self.texture_id {
-            ui.heading("This is a spectrogram:");
-            ui.add(egui::Image::new(texture_id, size));
-        }
-        self.bar_plot(ui);
+        // self.bar_plot(ui);
     }
 
     fn bar_plot(&mut self, ui: &mut Ui) -> Response {
@@ -72,10 +68,13 @@ impl Spectrum {
         for (last, new) in self.last_vec.iter_mut().zip(&specs[specs.len() - 1]) {
             *last = *new;
         }
-        let texture_id = Some(
-            self.tex_mngr
-                .get_spectrogram_texture(ctx, int_specs, 1024, 512),
-        );
+        self.texture_id = Some((
+            egui::Vec2::new(1024.0, 512.0),
+            (&(self
+                .tex_mngr
+                .get_spectrogram_texture(ctx, int_specs, 1024, 512)))
+                .into(),
+        ));
     }
 }
 
@@ -144,19 +143,28 @@ impl Default for SpectrogramGui {
 
 impl eframe::App for SpectrogramGui {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        //        ui.heading("SpectrogramGui");
+        //self.spectrum.ui(ui);
+        //ui.vertical(|ui| {
         let mut spectrum = Vec::new();
         if let Some(stft_handler) = &mut self.stft_handler {
             stft_handler.run();
             spectrum = stft_handler.get_spectrum();
         }
+
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("SpectrogramGui");
-            ui.vertical(|ui| {
-                if spectrum.len() > 0 {
-                    self.spectrum.set_values(ctx, spectrum);
-                }
-                self.spectrum.ui(ui);
-            });
+            if spectrum.len() > 0 {
+                self.spectrum.set_values(ui.ctx(), spectrum);
+            }
+
+            if let Some((size, texture_id)) = self.spectrum.texture_id {
+                ui.heading("This is a spectrogram:");
+                ui.add(egui::Image::new(texture_id, size));
+                println!("test");
+            }
+
+            //});
+            ctx.request_repaint();
         });
     }
 }
