@@ -30,7 +30,7 @@ impl Default for Spectrum {
 
 impl Spectrum {
     fn ui(&mut self, ui: &mut Ui) {
-        ui.ctx().request_repaint();
+
         //        ui.horizontal(|ui| {});
         // self.bar_plot(ui);
     }
@@ -69,10 +69,10 @@ impl Spectrum {
             *last = *new;
         }
         self.texture_id = Some((
-            egui::Vec2::new(1024.0, 512.0),
+            egui::Vec2::new(512.0, 512.0),
             (&(self
                 .tex_mngr
-                .get_spectrogram_texture(ctx, int_specs, 1024, 512)))
+                .get_spectrogram_texture(ctx, int_specs, 512, 512)))
                 .into(),
         ));
     }
@@ -143,28 +143,25 @@ impl Default for SpectrogramGui {
 
 impl eframe::App for SpectrogramGui {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        //        ui.heading("SpectrogramGui");
-        //self.spectrum.ui(ui);
-        //ui.vertical(|ui| {
-        let mut spectrum = Vec::new();
-        if let Some(stft_handler) = &mut self.stft_handler {
-            stft_handler.run();
-            spectrum = stft_handler.get_spectrum();
-        }
-
         egui::CentralPanel::default().show(ctx, |ui| {
-            if spectrum.len() > 0 {
-                self.spectrum.set_values(ui.ctx(), spectrum);
+            // get data
+            let mut spectrum = Vec::new();
+            if let Some(stft_handler) = &mut self.stft_handler {
+                stft_handler.run();
+                spectrum = stft_handler.get_spectrum();
             }
-
+            if spectrum.len() > 0 {
+                self.spectrum.set_values(ctx, spectrum);
+            }
             if let Some((size, texture_id)) = self.spectrum.texture_id {
                 ui.heading("This is a spectrogram:");
                 ui.add(egui::Image::new(texture_id, size));
-                println!("test");
+                ctx.request_repaint();
             }
 
-            //});
-            ctx.request_repaint();
+            //ui.heading("SpectrogramGui");
+            //self.spectrum.ui(ui);
+            //ui.vertical(|ui| {
         });
     }
 }
