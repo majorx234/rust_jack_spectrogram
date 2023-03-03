@@ -29,9 +29,14 @@ impl Default for Spectrum {
 }
 
 impl Spectrum {
-    fn ui(&mut self, ui: &mut Ui) {
+    fn ui(&mut self, ui: &mut Ui, spectrum_data: Vec<Vec<f32>>) {
+        self.set_values(ui.ctx(), spectrum_data);
 
-        //        ui.horizontal(|ui| {});
+        if let Some((size, texture_id)) = self.texture_id {
+            ui.add(egui::Image::new(texture_id, size));
+            ui.ctx().request_repaint();
+        }
+        // ui.horizontal(|ui| {});
         // self.bar_plot(ui);
     }
 
@@ -153,14 +158,7 @@ impl eframe::App for SpectrogramGui {
                 spectrum = stft_handler.get_spectrum();
             }
 
-            self.spectrum.set_values(ctx, spectrum);
-
-            if let Some((size, texture_id)) = self.spectrum.texture_id {
-                ui.add(egui::Image::new(texture_id, size));
-                ctx.request_repaint();
-            }
-            //self.spectrum.ui(ui);
-            //ui.vertical(|ui| {
+            self.spectrum.ui(ui, spectrum);
         });
     }
 }
