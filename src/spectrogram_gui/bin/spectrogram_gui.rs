@@ -65,8 +65,10 @@ impl Spectrum {
                 .collect();
             int_specs.push(int_spec);
         }
-        for (last, new) in self.last_vec.iter_mut().zip(&specs[specs.len() - 1]) {
-            *last = *new;
+        if specs.len() > 0 {
+            for (last, new) in self.last_vec.iter_mut().zip(&specs[specs.len() - 1]) {
+                *last = *new;
+            }
         }
         self.texture_id = Some((
             egui::Vec2::new(512.0, 512.0),
@@ -150,16 +152,13 @@ impl eframe::App for SpectrogramGui {
                 stft_handler.run();
                 spectrum = stft_handler.get_spectrum();
             }
-            if spectrum.len() > 0 {
-                self.spectrum.set_values(ctx, spectrum);
-            }
+
+            self.spectrum.set_values(ctx, spectrum);
+
             if let Some((size, texture_id)) = self.spectrum.texture_id {
-                ui.heading("This is a spectrogram:");
                 ui.add(egui::Image::new(texture_id, size));
                 ctx.request_repaint();
             }
-
-            //ui.heading("SpectrogramGui");
             //self.spectrum.ui(ui);
             //ui.vertical(|ui| {
         });
