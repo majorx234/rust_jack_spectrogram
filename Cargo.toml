@@ -15,6 +15,7 @@ path = "src/spectrogram_gui/bin/main.rs"
 [[bin]]
 name = "ringbuffer_test"
 path = "src/ringbuffer_test/bin/main.rs"
+
 [dependencies]
 eframe = { version = "0.18.0"}
 crossbeam-channel = "0.5.6"
@@ -25,3 +26,10 @@ rustfft = {version = "6.1.0"}
 jack = {version = "0.10.0"}
 ringbuf = {version = "0.3.1"}
 itertools = {version = "0.10.5"}
+
+[dev-dependencies]
+criterion = "0.4"
+
+[[bench]]
+name = "fft_benchmark"
+harness = false
