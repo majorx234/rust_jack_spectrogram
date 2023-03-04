@@ -22,7 +22,7 @@ impl Default for Spectrum {
     fn default() -> Self {
         Self {
             last_vec: vec![0.0; 512],
-            tex_mngr: TextureManager(vec![Color32::from_rgb(255, 255, 255); 1024 * 512]),
+            tex_mngr: TextureManager(vec![Color32::from_rgb(255, 255, 255); 1024 * 512], None),
             texture_id: None,
         }
     }
@@ -74,14 +74,12 @@ impl Spectrum {
             for (last, new) in self.last_vec.iter_mut().zip(&specs[specs.len() - 1]) {
                 *last = *new;
             }
+            self.tex_mngr
+                .update_spectrogram_texture(ctx, int_specs, 512, 512);
         }
-        self.texture_id = Some((
-            egui::Vec2::new(512.0, 512.0),
-            (&(self
-                .tex_mngr
-                .get_spectrogram_texture(ctx, int_specs, 512, 512)))
-                .into(),
-        ));
+        if let Some(ref texture) = self.tex_mngr.1 {
+            self.texture_id = Some((egui::Vec2::new(512.0, 512.0), texture.into()));
+        }
     }
 }
 
@@ -91,17 +89,17 @@ fn value_to_rgb(value: u8) -> egui::epaint::Color32 {
     Color32::from_rgb(0, 0, 0)
 }
 
-#[derive(Default)]
-struct TextureManager(Vec<egui::epaint::Color32>);
+//#[derive(Default)]
+struct TextureManager(Vec<egui::epaint::Color32>, Option<TextureHandle>);
 
 impl TextureManager {
-    pub fn get_spectrogram_texture(
+    pub fn update_spectrogram_texture(
         &mut self,
         ctx: &egui::Context,
         specs: Vec<Vec<u8>>,
         width: usize,
         height: usize,
-    ) -> TextureHandle {
+    ) {
         let mut new_cols = specs
             .into_iter()
             .flatten()
@@ -116,13 +114,13 @@ impl TextureManager {
         // maybe return an option
         // or handle if pixels.len() < width*height
         let pixels: Vec<egui::epaint::Color32> = self.0.clone();
-        ctx.load_texture(
+        self.1 = Some(ctx.load_texture(
             "color_test_gradient",
             egui::ColorImage {
                 size: [width, height],
                 pixels,
             },
-        )
+        ));
     }
 }
 
