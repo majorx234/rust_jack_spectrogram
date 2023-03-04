@@ -76,9 +76,9 @@ impl Spectrum {
             }
             self.tex_mngr
                 .update_spectrogram_texture(ctx, int_specs, 512, 512);
-        }
-        if let Some(ref texture) = self.tex_mngr.1 {
-            self.texture_id = Some((egui::Vec2::new(512.0, 512.0), texture.into()));
+            if let Some(ref texture) = self.tex_mngr.1 {
+                self.texture_id = Some((egui::Vec2::new(512.0, 512.0), texture.into()));
+            }
         }
     }
 }
