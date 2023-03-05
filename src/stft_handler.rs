@@ -11,6 +11,11 @@ use std::sync::{Arc, Mutex};
 
 type ConsumerRbf32 = Consumer<f32, Arc<SharedRb<f32, std::vec::Vec<MaybeUninit<f32>>>>>;
 
+enum FftMode {
+    RustFFT,
+    RealFFT,
+}
+
 pub struct StftHandler {
     ringbuffer_left_out: Option<ConsumerRbf32>,
     ringbuffer_right_out: Option<ConsumerRbf32>,
@@ -20,6 +25,7 @@ pub struct StftHandler {
     step_size: usize,
     time: f32,
     stft: STFT<f32>,
+    fft_mode: FftMode,
 }
 
 impl Default for StftHandler {
@@ -33,6 +39,7 @@ impl Default for StftHandler {
             step_size: 256,
             time: 0.0,
             stft: STFT::new(WindowType::Hanning, 1024, 1024),
+            fft_mode: FftMode::RustFFT,
         }
     }
 }
@@ -49,6 +56,7 @@ impl StftHandler {
             step_size: 256,
             time: 0.0,
             stft: STFT::new(WindowType::Hanning, 1024, 512),
+            fft_mode: FftMode::RustFFT,
         }
     }
 
@@ -70,7 +78,17 @@ impl StftHandler {
                             );
                         }
                         ringbuffer_left_out.skip(self.step_size);
-                        self.stft.compute_column(&mut tmp_vec, &mut values);
+                        match self.fft_mode {
+                            FftMode::RustFFT => {
+                                self.stft.compute_column(&mut tmp_vec, &mut values);
+                            }
+                            FftMode::RealFFT => {
+                                // dummy implementation
+                                // ToDo call RealFFT
+                                self.stft.compute_column(&mut tmp_vec, &mut values);
+                            }
+                        }
+
                         self.spectrum_queue_left
                             .lock()
                             .expect("Unlock")
