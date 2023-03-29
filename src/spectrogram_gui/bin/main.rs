@@ -17,7 +17,7 @@ fn main() {
     let mut spectrogram_app = SpectrogramGui::new(stft_handler);
     //    spectrogram_app.set_ringbuffer(ringbuffer_left_out, ringbuffer_right_out);
     let mut options = eframe::NativeOptions::default();
-    let window_size: eframe::egui::Vec2 = eframe::egui::Vec2::new(600.0, 300.0);
+    let window_size: eframe::egui::Vec2 = eframe::egui::Vec2::new(525.0, 530.0);
     options.initial_window_size = Some(window_size);
 
     eframe::run_native(
