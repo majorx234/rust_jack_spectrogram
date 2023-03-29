@@ -110,6 +110,7 @@ where
     pub step_size: usize,
     pub rfft: Arc<dyn RealToComplex<T>>,
     pub window: Option<Vec<T>>,
+    pub real_input: Vec<T>,
     pub scratch_space: Vec<Complex<T>>,
 }
 
@@ -164,12 +165,14 @@ where
         let mut real_planner = RealFftPlanner::<T>::new();
         let rfft = real_planner.plan_fft_forward(window_size);
         let scratch_space = rfft.make_scratch_vec();
+        let real_input = rfft.make_input_vec();
 
         STFT {
             window_size: window_size,
             step_size: step_size,
             rfft: rfft,
             window: window,
+            real_input: real_input,
             scratch_space: scratch_space,
         }
     }
@@ -183,20 +186,19 @@ where
         assert_eq!(input.len(), self.window_size);
 
         // multiply real_input with window
-        let mut real_input = self.rfft.make_input_vec();
         if let Some(ref window) = self.window {
-            for (dst, src, window_elem) in izip!(real_input.iter_mut(), input.iter(), window.iter())
+            for (dst, src, window_elem) in izip!(self.real_input.iter_mut(), input.iter(), window.iter())
             {
                 *dst = *src * *window_elem;
             }
         } else {
-            for (dst, src) in real_input.iter_mut().zip(input.iter()) {
+            for (dst, src) in self.real_input.iter_mut().zip(input.iter()) {
                 *dst = *src;
             }
         };
         // compute fft
         self.rfft
-            .process_with_scratch(&mut real_input, output, &mut self.scratch_space);
+            .process_with_scratch(&mut self.real_input, output, &mut self.scratch_space);
     }
 
     /// # Panics
