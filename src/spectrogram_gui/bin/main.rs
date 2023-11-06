@@ -11,7 +11,7 @@ fn main() {
 
     let (mut ringbuffer_left_in, mut ringbuffer_left_out) = ringbuffer_left.split();
     let (mut ringbuffer_right_in, mut ringbuffer_right_out) = ringbuffer_right.split();
-    let stft_handler = StftHandler::new(ringbuffer_left_out, ringbuffer_right_out);
+    let stft_handler = StftHandler::new(ringbuffer_left_out);
     let jack_thread = start_jack_thread(ringbuffer_left_in, ringbuffer_right_in);
 
     let mut spectrogram_app = SpectrogramGui::new(stft_handler);
