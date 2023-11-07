@@ -14,7 +14,9 @@ fn main() {
     let stft_handler = StftHandler::new(ringbuffer_left_out);
     let jack_thread = start_jack_thread(ringbuffer_left_in, ringbuffer_right_in);
 
-    let mut spectrogram_app = SpectrogramGui::new(stft_handler);
+    let mut stft_handlers = Vec::new();
+    stft_handlers.push(stft_handler);
+    let mut spectrogram_app = SpectrogramGui::new(stft_handlers);
     //    spectrogram_app.set_ringbuffer(ringbuffer_left_out, ringbuffer_right_out);
     let mut options = eframe::NativeOptions::default();
     let window_size: eframe::egui::Vec2 = eframe::egui::Vec2::new(525.0, 530.0);
