@@ -3,6 +3,7 @@ use jack;
 use ringbuf::Producer;
 use ringbuf::SharedRb;
 use std::mem::MaybeUninit;
+use std::process::exit;
 use std::sync::Arc;
 use std::{thread, time::Duration};
 
@@ -24,7 +25,19 @@ pub fn start_jack_thread(
         let in_b = client
             .register_port("spectrogram_gui_r", jack::AudioIn::default())
             .unwrap();
+
         let frame_size = client.buffer_size() as usize;
+        if let Ok(_) = client.set_buffer_size(frame_size as u32) {
+            // get frame size
+            let frame_size = client.buffer_size() as usize;
+            println!(
+                "client started with samplerate: {} and frame_size: {}",
+                sample_rate, frame_size
+            );
+        } else {
+            exit(-1);
+        }
+
         let process_callback = move |_: &jack::Client, ps: &jack::ProcessScope| -> jack::Control {
             let in_a_p = in_a.as_slice(ps);
             let in_b_p = in_b.as_slice(ps);
