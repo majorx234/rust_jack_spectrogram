@@ -1,7 +1,5 @@
 use crate::fifo_queue::FifoQueue;
-use crate::spectrum_queue;
 use crate::spectrum_queue::SpectrumQueue;
-use crate::stft;
 use crate::stft::WindowType;
 use crate::stft::STFT;
 use ringbuf::Consumer;

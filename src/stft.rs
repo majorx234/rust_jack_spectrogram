@@ -187,7 +187,8 @@ where
 
         // multiply real_input with window
         if let Some(ref window) = self.window {
-            for (dst, src, window_elem) in izip!(self.real_input.iter_mut(), input.iter(), window.iter())
+            for (dst, src, window_elem) in
+                izip!(self.real_input.iter_mut(), input.iter(), window.iter())
             {
                 *dst = *src * *window_elem;
             }
@@ -197,8 +198,9 @@ where
             }
         };
         // compute fft
-        self.rfft
-            .process_with_scratch(&mut self.real_input, output, &mut self.scratch_space);
+        let _ =
+            self.rfft
+                .process_with_scratch(&mut self.real_input, output, &mut self.scratch_space);
     }
 
     /// # Panics

@@ -118,11 +118,9 @@ impl TextureManager {
         width: usize,
         height: usize,
     ) {
-        for (specs, mut texture_queue, mut textures) in
-            izip!(&specs_channel, &mut self.0, &mut self.1)
-        {
+        for (specs, texture_queue, textures) in izip!(&specs_channel, &mut self.0, &mut self.1) {
             let mut new_cols = specs
-                .into_iter()
+                .iter()
                 .flatten()
                 .map(|x| egui::epaint::Color32::from_gray(*x))
                 .collect::<Vec<Color32>>();

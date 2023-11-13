@@ -1,5 +1,5 @@
 use crate::fifo_queue::FifoQueue;
-use std::{collections::VecDeque, default};
+use std::collections::VecDeque;
 
 pub struct SpectrumQueue {
     pub data: VecDeque<Vec<f32>>,

@@ -9,14 +9,13 @@ fn main() {
     let ringbuffer_left = HeapRb::<f32>::new(96000);
     let ringbuffer_right = HeapRb::<f32>::new(96000);
 
-    let (mut ringbuffer_left_in, mut ringbuffer_left_out) = ringbuffer_left.split();
-    let (mut ringbuffer_right_in, mut ringbuffer_right_out) = ringbuffer_right.split();
+    let (ringbuffer_left_in, ringbuffer_left_out) = ringbuffer_left.split();
+    let (ringbuffer_right_in, ringbuffer_right_out) = ringbuffer_right.split();
     let stft_handler = StftHandler::new(ringbuffer_left_out);
     let jack_thread = start_jack_thread(ringbuffer_left_in, ringbuffer_right_in);
 
-    let mut stft_handlers = Vec::new();
-    stft_handlers.push(stft_handler);
-    let mut spectrogram_app = SpectrogramGui::new(stft_handlers);
+    let stft_handlers = vec![stft_handler];
+    let spectrogram_app = SpectrogramGui::new(stft_handlers);
     //    spectrogram_app.set_ringbuffer(ringbuffer_left_out, ringbuffer_right_out);
     let mut options = eframe::NativeOptions::default();
     let window_size: eframe::egui::Vec2 = eframe::egui::Vec2::new(525.0, 530.0);
